@@ -1,14 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Management;
-using System.Net.Security;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace LeagueAutoAccept
@@ -30,7 +21,7 @@ namespace LeagueAutoAccept
             notifyIcon.ShowBalloonTip(5000);
             notifyMenu();
 
-            System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+            Timer timer = new Timer();
             timer.Tick += new EventHandler(readyCheckAccept);
             timer.Interval = 500;
             timer.Start();
