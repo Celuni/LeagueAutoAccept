@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueAutoAccept", "LeagueAutoAccept\LeagueAutoAccept.csproj", "{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {37F72EAF-811B-45FA-A1D8-F278897EA063}
+	EndGlobalSection
+EndGlobal
