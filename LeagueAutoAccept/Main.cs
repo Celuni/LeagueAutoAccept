@@ -8,8 +8,8 @@ namespace LeagueAutoAccept
     class Main : ApplicationContext
     {
         private bool enabled = true;
-        private readonly NotifyIcon NotifyIcon;
         private Timer timer;
+        private readonly NotifyIcon NotifyIcon;
         private MenuItem aboutMenu;
         private MenuItem enabledMenu;
         private MenuItem quitMenu;
