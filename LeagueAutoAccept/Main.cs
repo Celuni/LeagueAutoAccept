@@ -1,63 +1,76 @@
 ﻿using System;
 using System.Diagnostics;
+using Timer = System.Timers.Timer;
 using System.Windows.Forms;
 
 namespace LeagueAutoAccept
 {
     class Main : ApplicationContext
     {
-        private NotifyIcon notifyIcon;
         private bool enabled = true;
+        private readonly NotifyIcon NotifyIcon;
+        private Timer timer;
+        private MenuItem aboutMenu;
+        private MenuItem enabledMenu;
+        private MenuItem quitMenu;
 
         public Main()
         {
-            notifyIcon = new NotifyIcon()
+            NotifyIcon = new NotifyIcon()
             {
                 Icon = Properties.Resources.Icon,
                 Visible = true,
                 BalloonTipTitle = "LeagueAutoAccept",
                 BalloonTipText = "All ready checks will be accepted automatically."
             };
-            notifyIcon.ShowBalloonTip(5000);
-            notifyMenu();
+            NotifyIcon.ShowBalloonTip(5000);
+            NotifyMenu();
+            StartTimer();
+        }
 
-            Timer timer = new Timer();
-            timer.Tick += new EventHandler(readyCheckAccept);
+        private void StartTimer()
+        {
+            timer = new Timer();
+            timer.Elapsed += ReadyCheckAccept;
             timer.Interval = 500;
             timer.Start();
         }
 
-        private void readyCheckAccept(object sender, EventArgs e)
+        private void ReadyCheckAccept(object sender, EventArgs eventArgs)
         {
-            if (enabled)
+            foreach (Process process in LeagueClient.GetLeagueClientProcesses())
             {
-                foreach (Process process in LeagueClient.getLeagueClientProcesses())
-                {
-                    var apiAuth = LeagueClient.getAPIPortAndToken(process);
-                    string result = LeagueClient.sendAPIRequest(apiAuth.Item1, apiAuth.Item2, "POST", "/lol-matchmaking/v1/ready-check/accept", "");
-                    Console.WriteLine(result);
-                }
+                var apiAuth = LeagueClient.GetAPIPortAndToken(process);
+                string result = LeagueClient.SendAPIRequest(apiAuth, "POST", "/lol-matchmaking/v1/ready-check/accept", "");
+                Console.WriteLine(result);
             }
         }
 
-        private void notifyMenu()
+        private void NotifyMenu()
         {
-            var aboutMenu = new MenuItem("LeagueAutoAccept");
-            aboutMenu.Enabled = false;
-
-            var enabledMenu = new MenuItem("Enabled", (a, e) =>
+            aboutMenu = new MenuItem("LeagueAutoAccept")
             {
+                Enabled = false
+            };
+
+            enabledMenu = new MenuItem("Enabled", (a, e) =>
+            {   
                 enabled = !enabled;
-                notifyMenu();
-            });
-            enabledMenu.Checked = enabled;
-
-            var quitMenu = new MenuItem("Quit", (a, e) =>
+                NotifyMenu();
+                if (!enabled) timer.Dispose(); else StartTimer();
+            })
             {
+                Checked = enabled
+            };
+
+            quitMenu = new MenuItem("Quit", (a, e) =>
+            {
+                aboutMenu.Dispose();
+                enabledMenu.Dispose();
                 Application.Exit();
             });
 
-            notifyIcon.ContextMenu = new ContextMenu(new MenuItem[] { aboutMenu, enabledMenu, quitMenu });
+            NotifyIcon.ContextMenu = new ContextMenu(new MenuItem[] { aboutMenu, enabledMenu, quitMenu });
         }
     }
 }
