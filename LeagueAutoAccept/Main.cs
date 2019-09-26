@@ -1,18 +1,19 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Diagnostics;
-using Timer = System.Timers.Timer;
 using System.Windows.Forms;
+using WebSocketSharp;
 
 namespace LeagueAutoAccept
 {
     class Main : ApplicationContext
     {
         private bool enabled = true;
-        private Timer timer;
         private readonly NotifyIcon NotifyIcon;
         private MenuItem aboutMenu;
         private MenuItem enabledMenu;
         private MenuItem quitMenu;
+        private readonly WebSocket ws;
 
         public Main()
         {
@@ -23,26 +24,38 @@ namespace LeagueAutoAccept
                 BalloonTipTitle = "LeagueAutoAccept",
                 BalloonTipText = "All ready checks will be accepted automatically."
             };
-            NotifyIcon.ShowBalloonTip(5000);
+            NotifyIcon.ShowBalloonTip(500);
             NotifyMenu();
-            StartTimer();
-        }
 
-        private void StartTimer()
-        {
-            timer = new Timer();
-            timer.Elapsed += ReadyCheckAccept;
-            timer.Interval = 500;
-            timer.Start();
-        }
-
-        private void ReadyCheckAccept(object sender, EventArgs eventArgs)
-        {
             foreach (Process process in LeagueClient.GetLeagueClientProcesses())
             {
                 var apiAuth = LeagueClient.GetAPIPortAndToken(process);
-                string result = LeagueClient.SendAPIRequest(apiAuth, "POST", "/lol-matchmaking/v1/ready-check/accept", "");
-                Console.WriteLine(result);
+                ws = new WebSocket($"wss://127.0.0.1:{apiAuth.Port}/", "wamp");
+                ws.SetCredentials("riot", apiAuth.Token, true);
+                ws.SslConfiguration.ServerCertificateValidationCallback = (send, certificate, chain, sslPolicyErrors) => true;
+                ws.OnMessage += (s, e) =>
+                {
+                    if (e.IsText && enabled)
+                    {
+                        var eventArray = JArray.Parse(e.Data);
+                        var eventNumber = eventArray[0].ToObject<int>();
+                        if (eventNumber == 8)
+                        {
+                            var leagueEvent = eventArray[2];
+                            var leagueEventData = leagueEvent.Value<string>("data");
+                            if (leagueEventData == "ReadyCheck")
+                            {
+                                NotifyIcon.BalloonTipText = "Accepted Ready Check!";
+                                NotifyIcon.ShowBalloonTip(200);
+
+                                string result = LeagueClient.SendAPIRequest(apiAuth, "POST", "/lol-matchmaking/v1/ready-check/accept", "");
+                                Console.WriteLine(result);
+                            }
+                        }
+                    }
+                };
+                ws.Connect();
+                ws.Send("[5, \"OnJsonApiEvent_lol-gameflow_v1_gameflow-phase\"]");
             }
         }
 
@@ -54,10 +67,9 @@ namespace LeagueAutoAccept
             };
 
             enabledMenu = new MenuItem("Enabled", (a, e) =>
-            {   
+            {
                 enabled = !enabled;
                 NotifyMenu();
-                if (!enabled) timer.Dispose(); else StartTimer();
             })
             {
                 Checked = enabled

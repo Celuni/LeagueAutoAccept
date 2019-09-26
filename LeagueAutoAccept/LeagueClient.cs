@@ -72,26 +72,21 @@ namespace LeagueAutoAccept
         public static string SendAPIRequest(APIAuth apiAuth, string method, string endpointUrl, string body)
         {
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes("riot:" + apiAuth.Token));
-            ServicePointManager.ServerCertificateValidationCallback = (send, certificate, chain, sslPolicyErrors) => { return true; };
+            ServicePointManager.ServerCertificateValidationCallback = (send, certificate, chain, sslPolicyErrors) => true;
             using (var client = new WebClient())
             {
                 client.Headers.Add(HttpRequestHeader.Authorization, "Basic " + auth);
                 try
                 {
                     string result;
-                    if (body == null)
-                    {
-                        result = client.DownloadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl);
-                    }
-                    else
-                    {
-                        result = client.UploadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl, method, body);
-                    }
+                    if (body == null) result = client.DownloadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl);
+                    else result = client.UploadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl, method, body);
+
                     return result;
                 }
                 catch (WebException ex)
                 {
-                    return new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();
+                    using (var streamReader = new StreamReader(ex.Response.GetResponseStream())) return streamReader.ReadToEnd();
                 }
             }
         }
