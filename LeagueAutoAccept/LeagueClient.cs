@@ -12,11 +12,11 @@ namespace LeagueAutoAccept
 {
     class LeagueClient
     {
-        private static readonly Regex TOKEN_REGEX = new Regex("\"--remoting-auth-token=(.+?)\"");
-        private static readonly Regex PORT_REGEX = new Regex("\"--app-port=(\\d+?)\"");
-        public class APIAuth
+        private static readonly Regex TokenRegex = new Regex("\"--remoting-auth-token=(.+?)\"");
+        private static readonly Regex PortRegex = new Regex("\"--app-port=(\\d+?)\"");
+        public class ApiAuth
         {
-            public APIAuth(string port, string token)
+            public ApiAuth(string port, string token)
             {
                 Port = port;
                 Token = token;
@@ -36,31 +36,35 @@ namespace LeagueAutoAccept
             return Process.GetProcessesByName("LeagueClientUx");
         }
 
-        public static APIAuth GetAPIPortAndToken(Process process)
+        public static ApiAuth GetApiPortAndToken(Process process)
         {
-            using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + process.Id))
-            using (ManagementObjectCollection objects = searcher.Get())
+            using (var searcher = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + process.Id))
+            using (var objects = searcher.Get())
             {
-                var commandLine = (string)objects.Cast<ManagementBaseObject>().SingleOrDefault()["CommandLine"];
+                var commandLine = (string)objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"];
                 if (commandLine == null)
                 {
-                    var currentProcessInfo = new ProcessStartInfo
+                    var fileName = Assembly.GetEntryAssembly()?.Location;
+                    if (fileName != null)
                     {
-                        UseShellExecute = true,
-                        WorkingDirectory = Environment.CurrentDirectory,
-                        FileName = Assembly.GetEntryAssembly().Location,
-                        Verb = "runas"
-                    };
+                        var currentProcessInfo = new ProcessStartInfo
+                        {
+                            UseShellExecute = true,
+                            WorkingDirectory = Environment.CurrentDirectory,
+                            FileName = fileName,
+                            Verb = "runas"
+                        };
 
-                    Process.Start(currentProcessInfo);
+                        Process.Start(currentProcessInfo);
+                    }
                     Environment.Exit(0);
                 }
 
                 try
                 {
-                    var port = PORT_REGEX.Match(commandLine).Groups[1].Value;
-                    var token = TOKEN_REGEX.Match(commandLine).Groups[1].Value;
-                    return new APIAuth(port, token);
+                    var port = PortRegex.Match(commandLine).Groups[1].Value;
+                    var token = TokenRegex.Match(commandLine).Groups[1].Value;
+                    return new ApiAuth(port, token);
                 }
                 catch (Exception ex)
                 {
@@ -69,7 +73,7 @@ namespace LeagueAutoAccept
             }
             return null;
         }
-        public static string SendAPIRequest(APIAuth apiAuth, string method, string endpointUrl, string body)
+        public static string SendApiRequest(ApiAuth apiAuth, string method, string endpointUrl, string body)
         {
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes("riot:" + apiAuth.Token));
             ServicePointManager.ServerCertificateValidationCallback = (send, certificate, chain, sslPolicyErrors) => true;
@@ -78,15 +82,11 @@ namespace LeagueAutoAccept
                 client.Headers.Add(HttpRequestHeader.Authorization, "Basic " + auth);
                 try
                 {
-                    string result;
-                    if (body == null) result = client.DownloadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl);
-                    else result = client.UploadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl, method, body);
-
-                    return result;
+                    return body == null ? client.DownloadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl) : client.UploadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl, method, body);
                 }
                 catch (WebException ex)
                 {
-                    using (var streamReader = new StreamReader(ex.Response.GetResponseStream())) return streamReader.ReadToEnd();
+                    using (var streamReader = new StreamReader(ex.Response.GetResponseStream() ?? throw new ArgumentNullException())) return streamReader.ReadToEnd();
                 }
             }
         }
