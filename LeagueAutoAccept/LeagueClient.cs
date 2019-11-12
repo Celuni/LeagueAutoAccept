@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace LeagueAutoAccept
 {
-    class LeagueClient
+    internal static class LeagueClient
     {
         private static readonly Regex TokenRegex = new Regex("\"--remoting-auth-token=(.+?)\"");
         private static readonly Regex PortRegex = new Regex("\"--app-port=(\\d+?)\"");
@@ -25,10 +25,6 @@ namespace LeagueAutoAccept
             public string Port { get; }
 
             public string Token { get; }
-        }
-        public static Process[] GetRiotClientProcesses()
-        {
-            return Process.GetProcessesByName("RiotClientUx");
         }
 
         public static Process[] GetLeagueClientProcesses()

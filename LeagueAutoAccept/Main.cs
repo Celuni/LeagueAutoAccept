@@ -6,7 +6,7 @@ using WebSocketSharp;
 
 namespace LeagueAutoAccept
 {
-    class Main : ApplicationContext
+    internal class Main : ApplicationContext
     {
         private bool _enabled = true;
         private bool _noLcuRunning = true;
@@ -17,7 +17,7 @@ namespace LeagueAutoAccept
 
         public Main()
         {
-            _notifyIcon = new NotifyIcon()
+            _notifyIcon = new NotifyIcon
             {
                 Icon = Resources.Icon,
                 Visible = true,
