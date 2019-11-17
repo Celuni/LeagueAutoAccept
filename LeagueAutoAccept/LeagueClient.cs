@@ -4,9 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using LeagueAutoAccept.Properties;
 
 namespace LeagueAutoAccept
 {
@@ -14,18 +15,6 @@ namespace LeagueAutoAccept
     {
         private static readonly Regex TokenRegex = new Regex("\"--remoting-auth-token=(.+?)\"");
         private static readonly Regex PortRegex = new Regex("\"--app-port=(\\d+?)\"");
-        public class ApiAuth
-        {
-            public ApiAuth(string port, string token)
-            {
-                Port = port;
-                Token = token;
-            }
-
-            public string Port { get; }
-
-            public string Token { get; }
-        }
 
         public static Process[] GetLeagueClientProcesses()
         {
@@ -37,22 +26,13 @@ namespace LeagueAutoAccept
             using (var searcher = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + process.Id))
             using (var objects = searcher.Get())
             {
-                var commandLine = (string)objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"];
+                var commandLine = (string) objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"];
                 if (commandLine == null)
                 {
-                    var fileName = Assembly.GetEntryAssembly()?.Location;
-                    if (fileName != null)
-                    {
-                        var currentProcessInfo = new ProcessStartInfo
-                        {
-                            UseShellExecute = true,
-                            WorkingDirectory = Environment.CurrentDirectory,
-                            FileName = fileName,
-                            Verb = "runas"
-                        };
+                    Main.NotifyIcon.BalloonTipIcon = ToolTipIcon.Error;
+                    Main.NotifyIcon.BalloonTipText = Resources.NotificationElevationError;
+                    Main.NotifyIcon.ShowBalloonTip(200);
 
-                        Process.Start(currentProcessInfo);
-                    }
                     Environment.Exit(0);
                 }
 
@@ -67,8 +47,10 @@ namespace LeagueAutoAccept
                     Console.WriteLine(ex.Message);
                 }
             }
+
             return null;
         }
+
         public static string SendApiRequest(ApiAuth apiAuth, string method, string endpointUrl, string body)
         {
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes("riot:" + apiAuth.Token));
@@ -78,13 +60,31 @@ namespace LeagueAutoAccept
                 client.Headers.Add(HttpRequestHeader.Authorization, "Basic " + auth);
                 try
                 {
-                    return body == null ? client.DownloadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl) : client.UploadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl, method, body);
+                    return body == null
+                        ? client.DownloadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl)
+                        : client.UploadString("https://127.0.0.1:" + apiAuth.Port + endpointUrl, method, body);
                 }
                 catch (WebException ex)
                 {
-                    using (var streamReader = new StreamReader(ex.Response.GetResponseStream() ?? throw new ArgumentNullException())) return streamReader.ReadToEnd();
+                    using (var streamReader = new StreamReader(ex.Response.GetResponseStream() ?? throw new ArgumentNullException()))
+                    {
+                        return streamReader.ReadToEnd();
+                    }
                 }
             }
+        }
+
+        public class ApiAuth
+        {
+            public ApiAuth(string port, string token)
+            {
+                Port = port;
+                Token = token;
+            }
+
+            public string Port { get; }
+
+            public string Token { get; }
         }
     }
 }

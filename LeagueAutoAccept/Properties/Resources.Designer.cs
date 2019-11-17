@@ -61,6 +61,15 @@ namespace LeagueAutoAccept.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enabled.
+        /// </summary>
+        internal static string Enabled {
+            get {
+                return ResourceManager.GetString("Enabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon Icon {
@@ -80,11 +89,29 @@ namespace LeagueAutoAccept.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to League is running in Admin mode. Please restart me with elevation!.
+        /// </summary>
+        internal static string NotificationElevationError {
+            get {
+                return ResourceManager.GetString("NotificationElevationError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All ready checks will be accepted automatically..
         /// </summary>
         internal static string NotificationStartText {
             get {
                 return ResourceManager.GetString("NotificationStartText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quit.
+        /// </summary>
+        internal static string Quit {
+            get {
+                return ResourceManager.GetString("Quit", resourceCulture);
             }
         }
         

@@ -1,48 +1,45 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using LeagueAutoAccept.Properties;
+using Newtonsoft.Json.Linq;
 using WebSocketSharp;
 
 namespace LeagueAutoAccept
 {
     internal class Main : ApplicationContext
     {
+        internal static NotifyIcon NotifyIcon;
         private bool _enabled = true;
         private bool _noLcuRunning = true;
-        private readonly NotifyIcon _notifyIcon;
-        private MenuItem _aboutMenu;
-        private MenuItem _enabledMenu;
-        private MenuItem _quitMenu;
 
         public Main()
         {
-            _notifyIcon = new NotifyIcon
+            NotifyIcon = new NotifyIcon
             {
                 Icon = Resources.Icon,
                 Visible = true,
                 BalloonTipTitle = Resources.Title,
                 BalloonTipText = Resources.NotificationStartText
             };
-            _notifyIcon.ShowBalloonTip(500);
+            NotifyIcon.ShowBalloonTip(500);
             NotifyMenu();
             StartCheckingForLcuStart();
         }
 
-        private void StartCheckingForLcuStart()
+        private async void StartCheckingForLcuStart()
         {
             while (_noLcuRunning)
-            {
                 if (LeagueClient.GetLeagueClientProcesses().Length == 0)
                 {
-                    Thread.Sleep(30000);
+                    await Task.Run(() => Thread.Sleep(30000));
                 }
                 else
                 {
                     _noLcuRunning = false;
                     AcceptReadyChecks();
                 }
-            }
         }
 
         private void AcceptReadyChecks()
@@ -56,20 +53,22 @@ namespace LeagueAutoAccept
                 ws.OnMessage += (s, e) =>
                 {
                     if (!e.IsText || !_enabled) return;
-                    
+
                     var eventArray = JArray.Parse(e.Data);
                     var eventNumber = eventArray[0].ToObject<int>();
-                    
+
                     if (eventNumber != 8) return;
-                    
+
                     var leagueEvent = eventArray[2];
                     var leagueEventData = leagueEvent.Value<string>("data");
 
                     if (leagueEventData != "ReadyCheck") return;
-                    
-                    _notifyIcon.BalloonTipText = Resources.NotificationAcceptReadyCheck;
-                    _notifyIcon.ShowBalloonTip(200);
-                    LeagueClient.SendApiRequest(apiAuth, "POST", "/lol-matchmaking/v1/ready-check/accept", "");
+
+                    NotifyIcon.BalloonTipIcon = ToolTipIcon.Info;
+                    NotifyIcon.BalloonTipText = Resources.NotificationAcceptReadyCheck;
+                    NotifyIcon.ShowBalloonTip(200);
+                    var result = LeagueClient.SendApiRequest(apiAuth, "POST", "/lol-matchmaking/v1/ready-check/accept", "");
+                    Trace.WriteLine(result);
                 };
                 ws.Connect();
                 ws.Send("[5, \"OnJsonApiEvent_lol-gameflow_v1_gameflow-phase\"]");
@@ -83,26 +82,17 @@ namespace LeagueAutoAccept
 
         private void NotifyMenu()
         {
-            _aboutMenu = new MenuItem(Resources.Title)
-            {
-                Enabled = false
-            };
-
-            _enabledMenu = new MenuItem("Enabled", (a, e) =>
+            NotifyIcon.ContextMenu = new ContextMenu();
+            NotifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Title) {Enabled = false});
+            NotifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Enabled, (a, e) =>
             {
                 _enabled = !_enabled;
                 NotifyMenu();
             })
             {
                 Checked = _enabled
-            };
-
-            _quitMenu = new MenuItem("Quit", (a, e) =>
-            {
-                Application.Exit();
             });
-
-            _notifyIcon.ContextMenu = new ContextMenu(new[] { _aboutMenu, _enabledMenu, _quitMenu });
+            NotifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Quit, (a, e) => Application.Exit()));
         }
     }
 }
