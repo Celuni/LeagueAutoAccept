@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Windows.UI.Notifications;
 using LeagueAutoAccept.Properties;
 using Newtonsoft.Json.Linq;
 using WebSocketSharp;
@@ -10,20 +11,17 @@ namespace LeagueAutoAccept
 {
     internal class Main : ApplicationContext
     {
-        internal static NotifyIcon NotifyIcon;
+        private readonly NotifyIcon _notifyIcon;
         private bool _enabled = true;
         private bool _noLcuRunning = true;
 
         public Main()
         {
-            NotifyIcon = new NotifyIcon
+            _notifyIcon = new NotifyIcon
             {
                 Icon = Resources.Icon,
-                Visible = true,
-                BalloonTipTitle = Resources.Title,
-                BalloonTipText = Resources.NotificationStartText
+                Visible = true
             };
-            NotifyIcon.ShowBalloonTip(500);
             NotifyMenu();
             StartCheckingForLcuStart();
         }
@@ -64,9 +62,8 @@ namespace LeagueAutoAccept
 
                     if (leagueEventData != "ReadyCheck") return;
 
-                    NotifyIcon.BalloonTipIcon = ToolTipIcon.Info;
-                    NotifyIcon.BalloonTipText = Resources.NotificationAcceptReadyCheck;
-                    NotifyIcon.ShowBalloonTip(200);
+                    ShowToast(Resources.NotificationAcceptReadyCheck);
+
                     var result = LeagueClient.SendApiRequest(apiAuth, "POST", "/lol-matchmaking/v1/ready-check/accept", "");
                     Trace.WriteLine(result);
                 };
@@ -82,9 +79,9 @@ namespace LeagueAutoAccept
 
         private void NotifyMenu()
         {
-            NotifyIcon.ContextMenu = new ContextMenu();
-            NotifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Title) {Enabled = false});
-            NotifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Enabled, (a, e) =>
+            _notifyIcon.ContextMenu = new ContextMenu();
+            _notifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Title) {Enabled = false});
+            _notifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Enabled, (a, e) =>
             {
                 _enabled = !_enabled;
                 NotifyMenu();
@@ -92,7 +89,16 @@ namespace LeagueAutoAccept
             {
                 Checked = _enabled
             });
-            NotifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Quit, (a, e) => Application.Exit()));
+            _notifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Quit, (a, e) => Application.Exit()));
+        }
+
+        public static void ShowToast(string content)
+        {
+            var toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText02);
+            var stringElements = toastXml.GetElementsByTagName("text");
+            stringElements[0].AppendChild(toastXml.CreateTextNode(Resources.Title));
+            stringElements[1].AppendChild(toastXml.CreateTextNode(content));
+            ToastNotificationManager.CreateToastNotifier("LeagueAutoAccept").Show(new ToastNotification(toastXml));
         }
     }
 }

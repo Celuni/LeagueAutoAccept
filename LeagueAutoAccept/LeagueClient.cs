@@ -6,7 +6,6 @@ using System.Management;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using LeagueAutoAccept.Properties;
 
 namespace LeagueAutoAccept
@@ -29,10 +28,7 @@ namespace LeagueAutoAccept
                 var commandLine = (string) objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"];
                 if (commandLine == null)
                 {
-                    Main.NotifyIcon.BalloonTipIcon = ToolTipIcon.Error;
-                    Main.NotifyIcon.BalloonTipText = Resources.NotificationElevationError;
-                    Main.NotifyIcon.ShowBalloonTip(200);
-
+                    Main.ShowToast(Resources.NotificationElevationError);
                     Environment.Exit(0);
                 }
 

@@ -5,16 +5,24 @@ VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueAutoAccept", "LeagueAutoAccept\LeagueAutoAccept.csproj", "{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}"
 EndProject
+Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "LeagueAutoAcceptWAP", "LeagueAutoAcceptWAP\LeagueAutoAcceptWAP.wapproj", "{3029C9CF-1D28-4498-BE99-B0E7E4B9280B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Release|x64 = Release|x64
 		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Release|x64.ActiveCfg = Release|x64
-		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Release|x64.Build.0 = Release|x64
 		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Debug|x64.ActiveCfg = Debug|x64
 		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Debug|x64.Build.0 = Debug|x64
+		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Release|x64.ActiveCfg = Release|x64
+		{7F13D289-7CBA-4F1A-8934-6AB3E0CA4237}.Release|x64.Build.0 = Release|x64
+		{3029C9CF-1D28-4498-BE99-B0E7E4B9280B}.Debug|x64.ActiveCfg = Debug|x64
+		{3029C9CF-1D28-4498-BE99-B0E7E4B9280B}.Debug|x64.Build.0 = Debug|x64
+		{3029C9CF-1D28-4498-BE99-B0E7E4B9280B}.Debug|x64.Deploy.0 = Debug|x64
+		{3029C9CF-1D28-4498-BE99-B0E7E4B9280B}.Release|x64.ActiveCfg = Release|x64
+		{3029C9CF-1D28-4498-BE99-B0E7E4B9280B}.Release|x64.Build.0 = Release|x64
+		{3029C9CF-1D28-4498-BE99-B0E7E4B9280B}.Release|x64.Deploy.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
