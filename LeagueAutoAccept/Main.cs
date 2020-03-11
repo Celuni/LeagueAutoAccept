@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Windows.UI.Notifications;
 using LeagueAutoAccept.Properties;
+using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using WebSocketSharp;
 
@@ -14,6 +15,8 @@ namespace LeagueAutoAccept
         private readonly NotifyIcon _notifyIcon;
         private bool _enabled = true;
         private bool _noLcuRunning = true;
+        private bool _runOnStartup;
+        private readonly RegistryKey _regStartUp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
 
         public Main()
         {
@@ -24,6 +27,7 @@ namespace LeagueAutoAccept
             };
             NotifyMenu();
             StartCheckingForLcuStart();
+            if (_regStartUp?.GetValue("LeagueAutoAccept") != null) _runOnStartup = true;
         }
 
         private async void StartCheckingForLcuStart()
@@ -62,10 +66,8 @@ namespace LeagueAutoAccept
 
                     if (leagueEventData != "ReadyCheck") return;
 
-                    ShowToast(Resources.NotificationAcceptReadyCheck);
-
                     var result = LeagueClient.SendApiRequest(apiAuth, "POST", "/lol-matchmaking/v1/ready-check/accept", "");
-                    Trace.WriteLine(result);
+                    Debug.WriteLine(result);
                 };
                 ws.Connect();
                 ws.Send("[5, \"OnJsonApiEvent_lol-gameflow_v1_gameflow-phase\"]");
@@ -88,6 +90,22 @@ namespace LeagueAutoAccept
             })
             {
                 Checked = _enabled
+            });
+            _notifyIcon.ContextMenu.MenuItems.Add(new MenuItem("Run on startup", (a, e) =>
+            {
+                _runOnStartup = !_runOnStartup;
+                if (_runOnStartup)
+                {
+                    _regStartUp?.SetValue("LeagueAutoAccept", Application.ExecutablePath);
+                }
+                else
+                {
+                    _regStartUp?.DeleteValue("LeagueAutoAccept", false);
+                }
+                NotifyMenu();
+            })
+            {
+                Checked = _runOnStartup
             });
             _notifyIcon.ContextMenu.MenuItems.Add(new MenuItem(Resources.Quit, (a, e) => Application.Exit()));
         }

@@ -13,7 +13,6 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'x64'
   buildConfiguration: 'Release'
-  appxPackageDir: '$(build.artifactStagingDirectory)\AppxPackages\\'
 
 steps:
   - task: NuGetToolInstaller@1
@@ -22,33 +21,19 @@ steps:
     inputs:
       restoreSolution: '$(solution)'
 
-  - task: DownloadSecureFile@1
-    name: signingCert
-    displayName: 'Download CA certificate'
-    inputs:
-      secureFile: 'aPinat_CodeSign.pfx'
-
   - task: VSBuild@1
     inputs:
       solution: '$(solution)'
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" 
-                      /p:AppxPackageDir="$(appxPackageDir)" 
-                      /p:AppxBundle=Always 
-                      /p:UapAppxPackageBuildMode=SideloadOnly 
-                      /p:AppxPackageSigningEnabled=true
-                      /p:PackageCertificateThumbprint="" 
-                      /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"'
 
-  - task: CopyFiles@2
-    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+  - task: GitHubRelease@1
+    displayName: 'GitHub release (create)'
     inputs:
-      SourceFolder: '$(System.DefaultWorkingDirectory)'
-      Contents: '**\bin\$(buildPlatform)\$(buildConfiguration)\**'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)'
-
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact: drop'
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      gitHubConnection: GitHub
+      repositoryName: aPinat/LeagueAutoAccept
+      tagSource: userSpecifiedTag
+      tag: '$(Build.BuildNumber)'
+      title: 'LeagueAutoAccept $(Build.BuildNumber)'
+      releaseNotesSource: inline
+      assets: '$(System.DefaultWorkingDirectory)/**/bin/**/*.exe'
