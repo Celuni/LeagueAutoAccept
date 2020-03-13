@@ -12,8 +12,8 @@ namespace LeagueAutoAccept
 {
     internal static class LeagueClient
     {
-        private static readonly Regex TokenRegex = new Regex("--remoting-auth-token=(.+?)\\s");
-        private static readonly Regex PortRegex = new Regex("--app-port=(\\d+?)\\s");
+        private static readonly Regex TokenRegex = new Regex("--remoting-auth-token=(.+?)[\"'\\s]");
+        private static readonly Regex PortRegex = new Regex("--app-port=(.+?)[\"'\\s]");
 
         public static Process[] GetLeagueClientProcesses()
         {
